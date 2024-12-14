@@ -49,39 +49,47 @@ namespace AppointmentR_API.Controllers
             return Ok(availability);
         }
         [HttpPut("{id}")]
-        public async Task<IActionResult> EditEmployeeAvailability(EmployeeAvailability availability , int id)
+        public async Task<ActionResult<EmployeeAvailability>> EditEmployeeAvailability(EmployeeAvailability availability, int id)
         {
             if (id != availability.Id)
-            {
-                return BadRequest("Availability ID mismatch.");
-            }
+                return BadRequest();
 
             var existingAvailability = await _context.EmployeeAvailability.FindAsync(id);
             if (existingAvailability == null)
-            {
                 return NotFound();
-            }
 
             if (availability.StartTime >= availability.EndTime)
-            {
-                return BadRequest("Start time must be before the end time.");
-            }
+                return BadRequest("Give Start before the end time.");
+
             _context.Entry(existingAvailability).CurrentValues.SetValues(availability);
-            try 
-            { 
+            try
+            {
                 await _context.SaveChangesAsync();
-            } 
+            }
             catch (DbUpdateConcurrencyException)
-            { 
-                if (!_context.EmployeeAvailability
-                    .Any(e => e.Id == id)) 
+            {
+                if (!_context.EmployeeAvailability.Any(e => e.Id == id))
                 {
                     return NotFound();
-                } 
-                throw; 
+                }
+                throw;
             }
+
             return Ok(availability);
-            
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteEmployeeAvailability(int id)
+        {
+            var availability = await _context.EmployeeAvailability.FindAsync(id);
+            if (availability == null)
+                return NotFound();
+
+            _context.EmployeeAvailability.Remove(availability);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(); 
         }
 
 
